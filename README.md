@@ -1,4 +1,6 @@
-# Asciidoc
+# Pagliascii
+
+> "But ASCII Doc, I _am_ Pagliascii"
 
 Soon to be [asciidoc](https://docs.asciidoctor.org/asciidoc/latest/syntax-quick-reference/) parser implemented in rust!
 
