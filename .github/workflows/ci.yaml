@@ -1,0 +1,51 @@
+name: CI
+on:
+  pull_request:
+  push:
+    branches:
+    - master
+
+env:
+  RUSTUP_MAX_RETRIES: 10
+
+jobs:
+  rust:
+    name: Rust
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      fail-fast: true
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
+      with:
+        ref: ${{ github.event.pull_request.head.sha }}
+        fetch-depth: 20
+
+    - name: Install Rust toolchain
+      uses: actions-rs/toolchain@v1
+      with:
+        toolchain: stable
+        profile: minimal
+        override: true
+        components: rustfmt
+
+    - name: Cache cargo directories
+      uses: actions/cache@v2
+      with:
+        path: |
+          ~/.cargo/registry
+          ~/.cargo/git
+        key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+
+    - name: Compile
+      run: cargo test --no-run
+
+    - name: Test
+      run: cargo test
+    
+    - name: rustfmt
+      run: cargo fmt -- --check
