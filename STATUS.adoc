@@ -1,0 +1,13 @@
+= Status Document
+
+This document will track the status and implementation updates of the project, see
+https://github.com/Veykril/pagliascii/issues/1 as to why. 
+
+==== 25.02.2021
+
+Not much to report yet aside from the direction I'm planning to take in regards to the parser as
+exams held me up. The preprocessor will have to be a seperate pass over the document as this will
+simplify parsing by quite a bit. The parsing itself will be implemented with a
+https://github.com/Geal/nom[nom] parser to give the source some structure in form of abstract syntax
+tree. Huge thanks go to https://github.com/fasterthanlime[fasterthanlime] for giving me access to
+their incomplete nom parser for me to base this work on. 
