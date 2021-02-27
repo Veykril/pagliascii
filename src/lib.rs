@@ -1,4 +1,6 @@
+pub mod ast;
 mod attributes;
-mod source;
+pub mod parser;
+mod span;
 
-pub use source::DocumentSource;
+use self::span::Span;
