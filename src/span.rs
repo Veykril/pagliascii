@@ -14,6 +14,10 @@ impl<'a> Span<'a> {
     pub fn new(i: &'a str) -> Self {
         Self(LocatedSpan::new(i))
     }
+
+    pub fn text(&self) -> &'a str {
+        (self.0).fragment()
+    }
 }
 
 impl<'a> From<&'a str> for Span<'a> {

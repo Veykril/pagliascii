@@ -42,6 +42,103 @@ fn check_parse<'a, T: fmt::Debug>(
 }
 
 #[test]
+fn parse_attr() {
+    check_parse(
+        super::parse_attribute,
+        "foobar",
+        expect![[r#"
+            (
+                "foobar",
+                None,
+            )
+        "#]],
+    );
+    check_parse(
+        super::parse_attribute,
+        "foobar,foobar",
+        expect![[r#"
+            (
+                "foobar",
+                None,
+            )
+        "#]],
+    );
+    check_parse(
+        super::parse_attribute,
+        "foobar=14\n",
+        expect![[r#"
+            (
+                "foobar",
+                Some(
+                    "14",
+                ),
+            )
+        "#]],
+    );
+    check_parse(
+        super::parse_attribute,
+        "foobar = 14",
+        expect![[r#"
+            (
+                "foobar",
+                Some(
+                    "14",
+                ),
+            )
+        "#]],
+    );
+    check_parse(
+        super::parse_attribute,
+        "foobar = \"14\"abc",
+        // FIXME
+        expect![[r#"
+            (
+                "foobar",
+                Some(
+                    "\"14\"abc",
+                ),
+            )
+        "#]],
+    );
+}
+
+#[test]
+fn parse_attr_list() {
+    check_parse(
+        super::parse_attribute_list,
+        "[foobar]",
+        expect![[r#"
+            {
+                "foobar": None,
+            }
+        "#]],
+    );
+    check_parse(
+        super::parse_attribute_list,
+        "[foobar,baz]",
+        expect![[r#"
+            {
+                "foobar": None,
+                "baz": None,
+            }
+        "#]],
+    );
+    check_parse(
+        super::parse_attribute_list,
+        "[foobar = foo ,baz , qux]",
+        expect![[r#"
+            {
+                "baz": None,
+                "foobar": Some(
+                    "foo ",
+                ),
+                "qux": None,
+            }
+        "#]],
+    );
+}
+
+#[test]
 fn parse_doc_attribute() {
     check_parse(
         super::parse_doc_attribute,

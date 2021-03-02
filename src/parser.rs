@@ -1,7 +1,9 @@
+use nom::branch::alt;
 use nom::bytes::complete::{tag, take_until, take_while1};
-use nom::combinator::{all_consuming, map, opt};
+use nom::character::complete::{alphanumeric1, none_of};
+use nom::combinator::{all_consuming, map, opt, recognize};
 use nom::error::ParseError;
-use nom::multi::{fold_many_m_n, many0, many_till};
+use nom::multi::{fold_many_m_n, many0, many1, many_till};
 use nom::sequence::{delimited, pair, preceded, terminated};
 
 use crate::ast::*;
@@ -52,6 +54,33 @@ pub fn parse_doc_attribute<'a, E: ParseError<Span<'a>>>(
         ),
         |(id, value)| DocAttribute { id, unset: false, value: value.into_iter().collect() },
     )(i)
+}
+
+pub fn parse_attribute<'a, E: ParseError<Span<'a>>>(
+    i: Span<'a>,
+) -> PResult<'a, (Span<'a>, Option<Span<'a>>), E> {
+    let name = recognize(pair(alphanumeric1, many0(alt((alphanumeric1, tag("-"), tag("."))))));
+    pair(name, opt(preceded(ws_delimited(tag("=")), recognize(many1(none_of(",]\n"))))))(i)
+}
+
+pub fn parse_attribute_list<'a, E: ParseError<Span<'a>>>(
+    i: Span<'a>,
+) -> PResult<'a, AttributeList<'a>, E> {
+    let parse_attributes = |mut i| {
+        let mut attr_list = AttributeList::default();
+        if let Ok((i2, (key, val))) = parse_attribute::<()>(i) {
+            attr_list.insert(key.text(), val.map(|s| s.text()));
+            i = i2;
+        }
+        while let PResult::<_, ()>::Ok((i2, (key, val))) =
+            preceded(ws_delimited(tag(",")), parse_attribute)(i)
+        {
+            i = i2;
+            attr_list.insert(key.text(), val.map(|s| s.text()));
+        }
+        Ok((i, attr_list))
+    };
+    delimited(tag("["), parse_attributes, tag("]"))(i)
 }
 
 pub fn parse_blocks<'a, E: ParseError<Span<'a>>>(i: Span<'a>) -> PResult<'a, Blocks<'a>, E> {

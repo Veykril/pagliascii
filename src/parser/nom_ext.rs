@@ -2,7 +2,8 @@ use nom::branch::alt;
 use nom::bytes::complete::{tag, take_until, take_while, take_while1};
 use nom::combinator::{map, peek, recognize, rest_len, verify};
 use nom::error::ParseError;
-use nom::sequence::terminated;
+use nom::sequence::{delimited, terminated};
+use nom::Parser;
 
 use crate::parser::PResult;
 use crate::span::Span;
@@ -24,6 +25,12 @@ pub fn ws1<'a, E: ParseError<Span<'a>>>(i: Span<'a>) -> PResult<'a, Span<'a>, E>
 
 pub fn wsnl<'a, E: ParseError<Span<'a>>>(i: Span<'a>) -> PResult<'a, Span<'a>, E> {
     take_while(char::is_whitespace)(i)
+}
+
+pub fn ws_delimited<'a, E: ParseError<Span<'a>>, O, P: Parser<Span<'a>, O, E>>(
+    parser: P,
+) -> impl FnMut(Span<'a>) -> PResult<'a, O, E> {
+    delimited(ws, parser, ws)
 }
 
 pub fn spacer<'a, E: ParseError<Span<'a>>>(i: Span<'a>) -> PResult<'a, Span<'a>, E> {
