@@ -128,10 +128,10 @@ fn parse_attr_list() {
         "[foobar = foo ,baz , qux]",
         expect![[r#"
             {
-                "baz": None,
                 "foobar": Some(
                     "foo ",
                 ),
+                "baz": None,
                 "qux": None,
             }
         "#]],

@@ -37,7 +37,7 @@ pub struct Version<'a> {
 
 /// A list of blocks
 pub type Blocks<'a> = Vec<Block<'a>>;
-pub type AttributeList<'a> = std::collections::HashMap<&'a str, Option<&'a str>>;
+pub type AttributeList<'a> = indexmap::IndexMap<&'a str, Option<&'a str>>;
 
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub struct Block<'a> {
