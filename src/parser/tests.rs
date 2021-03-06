@@ -177,6 +177,41 @@ fn parse_doc_attribute() {
             }
         "#]],
     );
+    check_parse(
+        super::parse_doc_attribute,
+        ":!foo: bar\n",
+        expect![[r#"
+            DocAttribute {
+                id: "foo",
+                unset: true,
+                value: [
+                    "bar",
+                ],
+            }
+        "#]],
+    );
+    check_parse(
+        super::parse_doc_attribute,
+        ":foo!:\n",
+        expect![[r#"
+            DocAttribute {
+                id: "foo",
+                unset: true,
+                value: [],
+            }
+        "#]],
+    );
+    check_parse(
+        super::parse_doc_attribute,
+        ":!foo!:\n",
+        expect![[r#"
+            DocAttribute {
+                id: "foo",
+                unset: true,
+                value: [],
+            }
+        "#]],
+    );
 }
 
 #[test]

@@ -4,7 +4,8 @@ use nom::character::complete::{alphanumeric1, none_of};
 use nom::combinator::{all_consuming, map, opt, recognize};
 use nom::error::ParseError;
 use nom::multi::{fold_many_m_n, many0, many1, many_till};
-use nom::sequence::{delimited, pair, preceded, terminated};
+use nom::sequence::{delimited, pair, preceded, terminated, tuple};
+use nom::Slice;
 
 use crate::ast::*;
 use crate::Span;
@@ -42,18 +43,18 @@ pub fn parse_doc_header<'a, E: ParseError<Span<'a>>>(
 pub fn parse_doc_attribute<'a, E: ParseError<Span<'a>>>(
     i: Span<'a>,
 ) -> PResult<'a, DocAttribute<'a>, E> {
-    // FIXME: attribute unsetting
-    // FIXME: attribute continuation was a thing right?
-    map(
-        terminated(
-            pair(
-                delimited(tag(":"), take_while1(|c| c != '\n' && c != ':'), tag(":")),
-                opt(preceded(ws1, take_until("\n"))),
-            ),
-            ws_with_nl,
-        ),
-        |(id, value)| DocAttribute { id, unset: false, value: value.into_iter().collect() },
-    )(i)
+    // FIXME: hard/soft wrap attribute values
+    let ctor = |((bang1, id), value): ((Option<_>, Span<'a>), Option<_>)| {
+        let ends_with_bang = id.text().ends_with('!');
+        DocAttribute {
+            id: if ends_with_bang { id.slice(..id.len() - 1) } else { id },
+            unset: bang1.is_some() || ends_with_bang,
+            value: value.into_iter().collect(),
+        }
+    };
+    let id =
+        delimited(tag(":"), pair(opt(tag("!")), take_while1(|c| c != '\n' && c != ':')), tag(":"));
+    map(terminated(pair(id, opt(preceded(ws1, take_until("\n")))), ws_with_nl), ctor)(i)
 }
 
 pub fn parse_attribute<'a, E: ParseError<Span<'a>>>(
