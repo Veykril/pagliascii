@@ -11,3 +11,7 @@ simplify parsing by quite a bit. The parsing itself will be implemented with a
 https://github.com/Geal/nom[nom] parser to give the source some structure in form of abstract syntax
 tree. Huge thanks go to https://github.com/fasterthanlime[fasterthanlime] for giving me access to
 their incomplete nom parser for me to base this work on. 
+
+==== 11.02.2021
+
+An initial layout of the AST has been structured. Parsing most of the header and element attributes has been implemented.
