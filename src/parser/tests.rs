@@ -247,3 +247,35 @@ fn parse_doc_header() {
         "#]],
     );
 }
+
+#[test]
+fn parse_callouts() {
+    check_parse(
+        super::parse_callouts,
+        r"<0> foo
+<1> foo
+<2>bar
+<1337>baz
+",
+        expect![[r#"
+            [
+                Callout {
+                    number: 0,
+                    text: "foo",
+                },
+                Callout {
+                    number: 1,
+                    text: "foo",
+                },
+                Callout {
+                    number: 2,
+                    text: "bar",
+                },
+                Callout {
+                    number: 1337,
+                    text: "baz",
+                },
+            ]
+        "#]],
+    );
+}

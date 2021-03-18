@@ -1,7 +1,7 @@
 use nom::branch::alt;
 use nom::bytes::complete::{tag, take_until, take_while1};
-use nom::character::complete::{alphanumeric1, none_of};
-use nom::combinator::{all_consuming, map, opt, recognize};
+use nom::character::complete::{alphanumeric1, digit1, newline, none_of};
+use nom::combinator::{all_consuming, map, map_opt, opt, recognize};
 use nom::error::ParseError;
 use nom::multi::{fold_many_m_n, many0, many1, many_till};
 use nom::sequence::{delimited, pair, preceded, terminated, tuple};
@@ -85,8 +85,46 @@ pub fn parse_attribute_list<'a, E: ParseError<Span<'a>>>(
 }
 
 pub fn parse_blocks<'a, E: ParseError<Span<'a>>>(i: Span<'a>) -> PResult<'a, Blocks<'a>, E> {
-    // many0(parse_block)(i)
-    todo!()
+    many0(parse_attributed_block)(i)
+}
+
+pub fn parse_attributed_block<'a, E: ParseError<Span<'a>>>(
+    i: Span<'a>,
+) -> PResult<'a, Block<'a>, E> {
+    let thematic_break = map(tag("'''"), |_| Context::ThematicBreak);
+    let page_break = map(tag(">>>"), |_| Context::PageBreak);
+    let fenced = map(delimited(pair(tag("```"), newline), take_until("```"), tag("```")), |span| {
+        Context::Listing(span)
+    });
+
+    let parse_block = terminated(alt((thematic_break, page_break, fenced)), ws_with_nl);
+    preceded(
+        many0(ws_with_nl),
+        map(
+            tuple((opt(parse_attribute_list), parse_block, parse_callouts)),
+            |(attr_list, context, callouts)| Block {
+                context,
+                attributes: attr_list.unwrap_or_default(),
+                callouts,
+            },
+        ),
+    )(i)
+}
+
+pub fn parse_callouts<'a, E: ParseError<Span<'a>>>(
+    i: Span<'a>,
+) -> PResult<'a, Vec<Callout<'a>>, E> {
+    many0(parse_callout)(i)
+}
+
+pub fn parse_callout<'a, E: ParseError<Span<'a>>>(i: Span<'a>) -> PResult<'a, Callout<'a>, E> {
+    map(
+        pair(
+            map_opt(delimited(tag("<"), digit1, tag(">")), |span: Span| span.parse::<usize>().ok()),
+            delimited(ws, take_until("\n"), newline),
+        ),
+        |(number, text)| Callout { number, text },
+    )(i)
 }
 
 pub fn parse_section_title<'a, E: ParseError<Span<'a>>>(
