@@ -96,8 +96,10 @@ pub fn parse_attributed_block<'a, E: ParseError<Span<'a>>>(
     let fenced = map(delimited(pair(tag("```"), newline), take_until("```"), tag("```")), |span| {
         Context::Listing(span)
     });
+    let block_macro = map(parse_block_macro, Context::BlockMacro);
 
-    let parse_block = terminated(alt((thematic_break, page_break, fenced)), ws_with_nl);
+    let parse_block =
+        terminated(alt((thematic_break, page_break, fenced, block_macro)), newline_or_eof);
     preceded(
         many0(ws_with_nl),
         map(
@@ -124,6 +126,18 @@ pub fn parse_callout<'a, E: ParseError<Span<'a>>>(i: Span<'a>) -> PResult<'a, Ca
             delimited(ws, take_until("\n"), newline),
         ),
         |(number, text)| Callout { number, text },
+    )(i)
+}
+
+pub fn parse_block_macro<'a, E: ParseError<Span<'a>>>(i: Span<'a>) -> PResult<'a, Macro<'a>, E> {
+    map(
+        tuple((
+            recognize(take_while1(|c: char| c.is_ascii_alphabetic())),
+            tag("::"),
+            take_while1(|c| c != '[' && c != '\n'),
+            parse_attribute_list,
+        )),
+        |(name, _, target, attribute_list)| Macro { name, target, attribute_list },
     )(i)
 }
 

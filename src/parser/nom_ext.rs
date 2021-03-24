@@ -1,6 +1,7 @@
 use nom::branch::alt;
 use nom::bytes::complete::{tag, take_until, take_while, take_while1};
-use nom::combinator::{map, peek, recognize, rest_len, verify};
+use nom::character::complete::newline;
+use nom::combinator::{eof, map, peek, recognize, rest_len, verify};
 use nom::error::ParseError;
 use nom::sequence::{delimited, terminated};
 use nom::Parser;
@@ -31,6 +32,10 @@ pub fn ws_delimited<'a, E: ParseError<Span<'a>>, O, P: Parser<Span<'a>, O, E>>(
     parser: P,
 ) -> impl FnMut(Span<'a>) -> PResult<'a, O, E> {
     delimited(ws, parser, ws)
+}
+
+pub fn newline_or_eof<'a, E: ParseError<Span<'a>>>(i: Span<'a>) -> PResult<'a, Span<'a>, E> {
+    alt((recognize(newline), eof))(i)
 }
 
 pub fn spacer<'a, E: ParseError<Span<'a>>>(i: Span<'a>) -> PResult<'a, Span<'a>, E> {

@@ -17,6 +17,7 @@ fn assert_debug_eq_nom<T: fmt::Debug>(
             nom::Err::Incomplete(e) => panic!("{:?}", e),
             nom::Err::Error(e) | nom::Err::Failure(e) => {
                 let mut buf = String::new();
+                writeln!(buf, "\n").unwrap();
                 for (err_pos, err) in e.errors {
                     let line = err_pos.location_line() as usize;
                     let col = err_pos.get_utf8_column();
@@ -276,6 +277,68 @@ fn parse_callouts() {
                     text: "baz",
                 },
             ]
+        "#]],
+    );
+}
+#[test]
+fn parse_single_block_no_attributes() {
+    check_parse(
+        super::parse_attributed_block,
+        r">>>",
+        expect![[r#"
+            Block {
+                context: PageBreak,
+                attributes: {},
+                callouts: [],
+            }
+        "#]],
+    );
+    check_parse(
+        super::parse_attributed_block,
+        r"'''",
+        expect![[r#"
+            Block {
+                context: ThematicBreak,
+                attributes: {},
+                callouts: [],
+            }
+        "#]],
+    );
+    check_parse(
+        super::parse_attributed_block,
+        r"```
+This is a listing block
+with multiple lines
+```",
+        expect![[r#"
+            Block {
+                context: Listing(
+                    "This is a listing block\nwith multiple lines\n",
+                ),
+                attributes: {},
+                callouts: [],
+            }
+        "#]],
+    );
+    check_parse(
+        super::parse_attributed_block,
+        r"image::foo.png[width=240]",
+        expect![[r#"
+            Block {
+                context: BlockMacro(
+                    Macro {
+                        name: "image",
+                        target: "foo.png",
+                        attribute_list: {
+                            "width": Some(
+                                "240",
+                            ),
+                        },
+                    },
+                ),
+                attributes: {},
+                callouts: [],
+            }
         "#]],
     );
 }
