@@ -1,5 +1,7 @@
 = pagliascii
 
+==== Due to reasons I am unable to follow up to this project, see the linked https://gist.github.com/jamesmunns/06f70b68bde8e1394b79e936a8599718[gist] if you are interested in taking over the project instead.
+
 [quote]
 "But ASCII Doc, I _am_ Pagliascii"
 
